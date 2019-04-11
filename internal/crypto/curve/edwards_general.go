@@ -87,7 +87,7 @@ func FeCMove(f, g *FieldElement, b int32) {
 
 // FeFromBytes loads a field element dst from
 // src key bytes.
-func FeFromBytes(dst *FieldElement, src *Key) {
+func FeFromBytes(dst *FieldElement, src *Point) {
 	h0 := load4(src[:])
 	h1 := load3(src[4:]) << 6
 	h2 := load3(src[7:]) << 5
@@ -127,7 +127,7 @@ func FeFromBytes(dst *FieldElement, src *Key) {
 //
 //   Have q+2^(-255)x = 2^(-255)(h + 19 2^(-25) h9 + 2^(-1))
 //   so floor(2^(-255)(h + 19 2^(-25) h9 + 2^(-1))) = q.
-func FeToBytes(s *Key, h *FieldElement) {
+func FeToBytes(s *Point, h *FieldElement) {
 	var carry [10]int32
 
 	q := (19*h[9] + (1 << 24)) >> 25
@@ -218,14 +218,14 @@ func FeToBytes(s *Key, h *FieldElement) {
 
 // IsNegative returns true if the field element is negative.
 func (f *FieldElement) IsNegative() byte {
-	var s Key
+	var s Point
 	FeToBytes(&s, f)
 	return s[0] & 1
 }
 
 // IsNonZero returns the non zero bytes of a field element as int32.
 func (f *FieldElement) IsNonZero() int32 {
-	var s Key
+	var s Point
 	FeToBytes(&s, f)
 	var x uint8
 	for _, b := range s {

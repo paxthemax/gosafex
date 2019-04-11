@@ -41,14 +41,14 @@ func FeCopy(dst, src *FieldElement) {
 // FeIsNegative returns true if the field element value
 // is negative.
 func FeIsNegative(f *FieldElement) byte {
-	var s Key
+	var s Point
 	FeToBytes(&s, f)
 	return s[0] & 1
 }
 
 // FeIsNonZero returns non zero bytes of a field element as an int32.
 func FeIsNonZero(f *FieldElement) int32 {
-	var s Key
+	var s Point
 	FeToBytes(&s, f)
 	var x uint8
 	for _, b := range s {

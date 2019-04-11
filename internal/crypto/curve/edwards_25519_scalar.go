@@ -18,7 +18,7 @@ package curve
 //   where:
 //
 //l = 2^252 + 27742317777372353535851937790883648493.
-func ScMulAdd(s, a, b, c *Key) {
+func ScMulAdd(s, a, b, c *Point) {
 	a0 := 2097151 & load3(a[:])
 	a1 := 2097151 & (load4(a[2:]) >> 5)
 	a2 := 2097151 & (load3(a[5:]) >> 2)
@@ -456,7 +456,7 @@ func ScMulAdd(s, a, b, c *Key) {
 //   where
 //
 // l = 2^252 + 27742317777372353535851937790883648493.
-func ScReduce(out *Key, s *[64]byte) {
+func ScReduce(out *Point, s *[64]byte) {
 	s0 := 2097151 & load3(s[:])
 	s1 := 2097151 & (load4(s[2:]) >> 5)
 	s2 := 2097151 & (load3(s[5:]) >> 2)
@@ -775,7 +775,7 @@ func ScReduce(out *Key, s *[64]byte) {
 }
 
 // ScReduce32 TODO: comment this function
-func ScReduce32(s *Key) {
+func ScReduce32(s *Point) {
 	s0 := 2097151 & load3(s[:])
 	s1 := 2097151 & (load4(s[2:]) >> 5)
 	s2 := 2097151 & (load3(s[5:]) >> 2)
@@ -952,10 +952,10 @@ func signum(a int64) int64 {
 }
 
 // ScCheck is equivalent to sc_check.
-func ScCheck(s *Key) bool {
+func ScCheck(s *Point) bool {
 	return scValid(s)
 }
-func scValid(s *Key) bool {
+func scValid(s *Point) bool {
 	s0 := load4(s[:])
 	s1 := load4(s[4:])
 	s2 := load4(s[8:])
@@ -978,7 +978,7 @@ func scValid(s *Key) bool {
 // Preconditions:
 //
 //   a[31] <= 127
-func GeScalarMult(r *ProjectiveGroupElement, a *Key, A *ExtendedGroupElement) {
+func GeScalarMult(r *ProjectiveGroupElement, a *Point, A *ExtendedGroupElement) {
 	// Break the exponent into 4-bit nybbles.
 	var e [64]int8
 	for i, v := range a {
@@ -997,29 +997,29 @@ func GeScalarMult(r *ProjectiveGroupElement, a *Key, A *ExtendedGroupElement) {
 	var Ai [8]CachedGroupElement // A,2A,3A,4A,5A,6A,7A,8A
 	t := new(CompletedGroupElement)
 	u := new(ExtendedGroupElement)
-	A.toCached(&Ai[0])
+	A.ToCached(&Ai[0])
 	for i := 0; i < 7; i++ {
 		geAdd(t, A, &Ai[i])
-		t.toExtended(u)
-		u.toCached(&Ai[i+1])
+		t.ToExtended(u)
+		u.ToCached(&Ai[i+1])
 	}
-	r.zero()
+	r.Zero()
 	cur := new(CachedGroupElement)
 	minusCur := new(CachedGroupElement)
 	for i := 63; i >= 0; i-- {
 		b := e[i]
 		bNegative := int8(negative(int32(b)))
 		bAbs := b - (((-bNegative) & b) << 1)
-		r.double(t)
-		t.toProjective(r)
-		r.double(t)
-		t.toProjective(r)
-		r.double(t)
-		t.toProjective(r)
-		r.double(t)
-		t.toExtended(u)
+		r.Double(t)
+		t.ToProjective(r)
+		r.Double(t)
+		t.ToProjective(r)
+		r.Double(t)
+		t.ToProjective(r)
+		r.Double(t)
+		t.ToExtended(u)
 
-		cur.zero()
+		cur.Zero()
 		for j := int32(0); j < 8; j++ {
 			if equal(int32(bAbs), j+1) == 1 { // optimisation
 				cachedGroupElementCMove(cur, &Ai[j], equal(int32(bAbs), j+1))
@@ -1034,13 +1034,13 @@ func GeScalarMult(r *ProjectiveGroupElement, a *Key, A *ExtendedGroupElement) {
 		cachedGroupElementCMove(cur, minusCur, int32(bNegative))
 
 		geAdd(t, u, cur)
-		t.toProjective(r)
+		t.ToProjective(r)
 
 	}
 }
 
 // ScAdd TODO: comment this function
-func ScAdd(s, a, b *Key) {
+func ScAdd(s, a, b *Point) {
 	a0 := 2097151 & load3(a[:])
 	a1 := 2097151 & (load4(a[2:]) >> 5)
 	a2 := 2097151 & (load3(a[5:]) >> 2)
@@ -1239,7 +1239,7 @@ func ScAdd(s, a, b *Key) {
 }
 
 // ScSub TODO: comment this function
-func ScSub(s, a, b *Key) {
+func ScSub(s, a, b *Point) {
 	a0 := 2097151 & load3(a[:])
 	a1 := 2097151 & (load4(a[2:]) >> 5)
 	a2 := 2097151 & (load3(a[5:]) >> 2)
@@ -1454,7 +1454,7 @@ func ScSub(s, a, b *Key) {
 // where
 //
 // 	l = 2^252 + 27742317777372353535851937790883648493.
-func ScMulSub(s, a, b, c *Key) {
+func ScMulSub(s, a, b, c *Point) {
 	a0 := 2097151 & load3(a[:])
 	a1 := 2097151 & (load4(a[2:]) >> 5)
 	a2 := 2097151 & (load3(a[5:]) >> 2)
@@ -1892,7 +1892,7 @@ func ScMulSub(s, a, b, c *Key) {
 // where
 //
 // l = 2^252 + 27742317777372353535851937790883648493.
-func ScMul(s, a, b *Key) {
+func ScMul(s, a, b *Point) {
 	a0 := 2097151 & load3(a[:])
 	a1 := 2097151 & (load4(a[2:]) >> 5)
 	a2 := 2097151 & (load3(a[5:]) >> 2)
@@ -2308,7 +2308,7 @@ func ScMul(s, a, b *Key) {
 }
 
 // ScIsZero returns true if the given value is equal to zero.
-func ScIsZero(s *Key) bool {
+func ScIsZero(s *Point) bool {
 	return ((int(s[0]|s[1]|s[2]|s[3]|s[4]|s[5]|s[6]|s[7]|s[8]|
 		s[9]|s[10]|s[11]|s[12]|s[13]|s[14]|s[15]|s[16]|s[17]|
 		s[18]|s[19]|s[20]|s[21]|s[22]|s[23]|s[24]|s[25]|s[26]|

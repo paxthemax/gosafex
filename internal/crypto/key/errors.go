@@ -1,4 +1,4 @@
-package curve
+package key
 
 import (
 	"errors"

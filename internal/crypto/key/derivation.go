@@ -1,17 +1,18 @@
-package curve
+package key
 
 import (
 	"bytes"
 	"encoding/binary"
 
+	"github.com/safex/gosafex/internal/crypto/curve"
 	"github.com/safex/gosafex/internal/crypto/hash"
 )
 
 func hashToScalar(data ...[]byte) (result *Key) {
 	result = new(Key)
 	buf := hash.Keccak256(data...)
-	copy(result[:], buf[:32])
-	ScReduce32(result)
+	copy(result.v[:], buf[:32])
+	curve.ScReduce32(&result.v)
 	return
 }
 
@@ -22,22 +23,22 @@ func idxToVarint(idx uint64) (result []byte) {
 }
 
 func derivationToScalar(outIdx uint64, der *Key) (result *Key) {
-	buf := bytes.NewBuffer(der[:])
+	buf := bytes.NewBuffer(der.v[:])
 	buf.Write(idxToVarint(outIdx))
 	return hashToScalar(buf.Bytes())
 }
 
-func hashToEC(data []byte) (result *ExtendedGroupElement) {
-	result = new(ExtendedGroupElement)
-	p1 := new(ProjectiveGroupElement)
-	p2 := new(CompletedGroupElement)
+func hashToEC(data []byte) (result *extendedGE) {
+	result = new(extendedGE)
+	p1 := new(projectiveGE)
+	p2 := new(completedGE)
 	keyBuf := new(Key)
 
-	copy(keyBuf[:], data[:KeyLength]) // TODO: remove key copying.
-	p1.fromBytes(keyBuf)
-	GeMul8(p2, p1)
+	copy(keyBuf.v[:], data[:KeyLength]) // TODO: remove key copying.
+	p1.FromBytes(&keyBuf.v)
+	curve.GeMul8(p2, p1)
 
-	p2.toExtended(result)
+	p2.ToExtended(result)
 	return
 }
 
@@ -47,25 +48,25 @@ func hashToEC(data []byte) (result *ExtendedGroupElement) {
 // is invalid.
 // Returns ErrInvalidPubKey if the given public key is invalid.
 func DeriveKey(pub, priv *Key) (result *Key, err error) {
-	point := new(ExtendedGroupElement)
-	point2 := new(ProjectiveGroupElement)
-	point3 := new(CompletedGroupElement)
+	point := new(extendedGE)
+	point2 := new(projectiveGE)
+	point3 := new(completedGE)
 	keyBuf := new(Key)
 
-	if ok := ScCheck(priv); !ok {
+	if ok := curve.ScCheck(&priv.v); !ok {
 		return nil, ErrInvalidPrivKey
 	}
-	copy(keyBuf[:], pub[:]) // TODO: remove key copying.
-	if ok := point.fromBytes(keyBuf); !ok {
+	copy(keyBuf.v[:], pub.v[:]) // TODO: remove key copying.
+	if ok := point.FromBytes(&keyBuf.v); !ok {
 		return nil, ErrInvalidPubKey
 	}
 
-	copy(keyBuf[:], priv[:])
-	GeScalarMult(point2, keyBuf, point)
-	GeMul8(point3, point2)
-	point3.toProjective(point2)
+	copy(keyBuf.v[:], priv.v[:])
+	curve.GeScalarMult(point2, &keyBuf.v, point)
+	curve.GeMul8(point3, point2)
+	point3.ToProjective(point2)
 
-	point2.toBytes(keyBuf)
+	point2.ToBytes(&keyBuf.v)
 	return keyBuf, nil
 }
 
@@ -74,42 +75,42 @@ func DeriveKey(pub, priv *Key) (result *Key, err error) {
 func DerivationToPrivateKey(idx uint64, base, der *Key) (result *Key) {
 	keyBuf := new(Key)
 	scalar := derivationToScalar(idx, der)
-	copy(keyBuf[:], base[:])
-	ScAdd(keyBuf, keyBuf, scalar)
+	copy(keyBuf.v[:], base.v[:])
+	curve.ScAdd(&keyBuf.v, &keyBuf.v, &scalar.v)
 	return keyBuf
 }
 
 // DerivationToPublicKey TODO: comment function
 func DerivationToPublicKey(idx uint64, der, base *Key) (result *Key, err error) {
-	point1 := new(ExtendedGroupElement)
-	point2 := new(ExtendedGroupElement)
-	point3 := new(CachedGroupElement)
-	point4 := new(CompletedGroupElement)
-	point5 := new(ProjectiveGroupElement)
+	point1 := new(extendedGE)
+	point2 := new(extendedGE)
+	point3 := new(cachedGE)
+	point4 := new(completedGE)
+	point5 := new(projectiveGE)
 	keyBuf := new(Key)
 
-	copy(keyBuf[:], base[:]) // TODO: prevent copying.
-	if !point1.fromBytes(keyBuf) {
+	copy(keyBuf.v[:], base.v[:]) // TODO: prevent copying.
+	if !point1.FromBytes(&keyBuf.v) {
 		return nil, ErrInvalidPubKey
 	}
 
 	scalar := derivationToScalar(idx, der)
-	GeScalarMultBase(point2, scalar)
-	point2.toCached(point3)
-	geAdd(point4, point1, point3)
-	point4.toProjective(point5)
-	point5.toBytes(keyBuf)
+	curve.GeScalarMultBase(point2, &scalar.v)
+	point2.ToCached(point3)
+	curve.GeAdd(point4, point1, point3)
+	point4.ToProjective(point5)
+	point5.ToBytes(&keyBuf.v)
 	return keyBuf, nil
 }
 
-// KeyImage will return a key image generated from
+// GenerateKeyImage will return a key image generated from
 // a public/private key pair.
-func KeyImage(pub, priv *Key) (result *Key) {
+func GenerateKeyImage(pub, priv *Key) (result *Key) {
 	result = new(Key)
-	proj := new(ProjectiveGroupElement)
+	proj := new(projectiveGE)
 
 	ext := pub.toECPoint()
-	GeScalarMult(proj, pub, ext)
-	proj.toBytes(result)
+	curve.GeScalarMult(proj, &pub.v, ext)
+	proj.ToBytes(&result.v)
 	return
 }

@@ -1,4 +1,4 @@
-package curve
+package key
 
 import (
 	"reflect"
@@ -10,20 +10,20 @@ var (
 	testPubKeyStr     = "5195ac8b6933ca20d1f09114cffc89b61c6531b7c2228d03ea84dc5b944cbe8a"
 	testPrivKeyStr    = "9fde8d863a3040ff67ccc07c49b55ee4746d4db410fb18bdde7dbd7ccba4180e"
 	testDerivationStr = "9a1bdc439bb8446b5a7cfbbc3279bee5777336d98ba70f5c5a6f6bbbfb07d1b0"
-	testPubKey        = hexToKey(testPubKeyStr)
-	testPrivKey       = hexToKey(testPrivKeyStr)
-	testDerivation    = hexToKey(testDerivationStr)
+	testPubKey        = hexToPoint(testPubKeyStr)
+	testPrivKey       = hexToPoint(testPrivKeyStr)
+	testDerivation    = hexToPoint(testDerivationStr)
 )
 
 func TestDeriveKey(t *testing.T) {
 	type args struct {
-		pub  Key
-		priv Key
+		pub  Point
+		priv Point
 	}
 	tests := []struct {
 		name string
 		args args
-		want Key
+		want Point
 	}{
 		{
 			name: "passes, derivation",
