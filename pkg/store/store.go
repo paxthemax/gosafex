@@ -45,3 +45,7 @@ func (s *Store) Open(cfg *Config) error {
 func (s *Store) Close() {
 	s.Close()
 }
+
+// Sync will perform a sync operation to the underlying storage.
+// Currently sync is a no-op.
+func (s *Store) Sync() {}
