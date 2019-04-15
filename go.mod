@@ -3,7 +3,10 @@ module github.com/safex/gosafex
 replace github.com/safex/gosafex => ./
 
 require (
+	github.com/AndreasBriese/bbloom v0.0.0-20190306092124-e2d15f34fcf9 // indirect
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/dgraph-io/badger v1.5.4
+	github.com/dgryski/go-farm v0.0.0-20190323231341-8198c7b169ec // indirect
 	github.com/ebfe/keccak v0.0.0-20150115210727-5cc570678d1b
 	github.com/golang/protobuf v1.3.1
 	github.com/google/pprof v0.0.0-20190108002400-985cf9b4fdd2 // indirect
@@ -11,6 +14,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.7.0 // indirect
 	github.com/onsi/gomega v1.4.3 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.0.6
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.2.0
