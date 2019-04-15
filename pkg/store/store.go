@@ -40,3 +40,8 @@ func (s *Store) Open(cfg *Config) error {
 	s.db = db
 	return nil
 }
+
+// Close closes a store.
+func (s *Store) Close() {
+	s.Close()
+}
