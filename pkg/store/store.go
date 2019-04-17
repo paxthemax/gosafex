@@ -4,18 +4,9 @@ import (
 	"github.com/dgraph-io/badger"
 )
 
-// Storer can store data to a permanent storage.
-// Storer can open the permanent storage. Storer can close the permanent storage and release resources.
-// Storer can create a new transaction.
-type Storer interface {
-	Open(cfg *Config) error
-	Close()
-	NewTX() *TX
-}
-
 // Store is the permanent storage wrapper.
 type Store struct {
-	db *badger.DB
+	dbImpl *badger.DB
 }
 
 // GlobalStore is the global permanent storage pointer.
@@ -37,7 +28,7 @@ func (s *Store) Open(cfg *Config) error {
 		return err
 	}
 
-	s.db = db
+	s.dbImpl = db
 	return nil
 }
 
@@ -49,3 +40,17 @@ func (s *Store) Close() {
 // Sync will perform a sync operation to the underlying storage.
 // Currently sync is a no-op.
 func (s *Store) Sync() {}
+
+// NewTX creates a new transaction over the underlying storage.
+func (s *Store) NewTX() TX {
+	return TxData{
+		impl: s.dbImpl.NewTransaction(true),
+	}
+}
+
+// NewView creates a new data view over the underlying storage.
+func (s *Store) NewView() View {
+	return ViewData{
+		impl: s.dbImpl.NewTransaction(false),
+	}
+}
